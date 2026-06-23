@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_controller.dart';
 import '../../../core/permissions.dart';
+import '../../../core/theme/glassmorphism.dart';
 import '../../../models/ticket_model.dart';
 import '../../../models/profile_model.dart';
 
@@ -150,10 +151,13 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('Aksi Helpdesk/Admin', style: Theme.of(context).textTheme.titleLarge),
+                  const Text('Aksi Helpdesk/Admin',
+                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<TicketStatus>(
                     initialValue: selected,
+                    dropdownColor: const Color(0xFF192A56),
+                    style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(labelText: 'Update Status'),
                     items: TicketStatus.values
                         .map(
@@ -172,6 +176,7 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                   const SizedBox(height: 10),
                   TextField(
                     controller: _assignedController,
+                    style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(labelText: 'Assign Ticket Ke'),
                   ),
                   const SizedBox(height: 14),
@@ -206,7 +211,10 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     final statusIndex = TicketStatus.values.indexOf(status);
     final isDone = statusIndex <= currentStatusIndex;
     final isCurrent = statusIndex == currentStatusIndex;
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.onSurface;
+    final fgSub = fg.withValues(alpha: 0.6);
+    final fgMuted = fg.withValues(alpha: 0.4);
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -215,12 +223,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: isCurrent ? colorScheme.primaryContainer.withValues(alpha: 0.35) : null,
+          color: isCurrent ? AGColors.accentCyan.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isCurrent
-                ? colorScheme.primary.withValues(alpha: 0.6)
-                : colorScheme.outlineVariant,
+                ? AGColors.accentCyan.withValues(alpha: 0.4)
+                : fg.withValues(alpha: 0.1),
           ),
         ),
         child: Row(
@@ -233,10 +241,10 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                   Icon(
                     isDone ? Icons.check_circle : Icons.radio_button_unchecked,
                     color: isCurrent
-                        ? colorScheme.primary
+                        ? AGColors.accentCyan
                         : isDone
-                            ? Colors.green
-                            : Colors.grey,
+                            ? const Color(0xFF00CEC9)
+                            : fgMuted,
                     size: 20,
                   ),
                   if (!isLast)
@@ -245,8 +253,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                       width: 2,
                       height: 34,
                       color: isDone
-                          ? Colors.green.withValues(alpha: 0.6)
-                          : colorScheme.outlineVariant,
+                          ? AGColors.accentCyan.withValues(alpha: 0.4)
+                          : fg.withValues(alpha: 0.1),
                     ),
                 ],
               ),
@@ -258,7 +266,11 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(status.label, style: Theme.of(context).textTheme.titleSmall),
+                    Text(status.label,
+                        style: TextStyle(
+                          color: isCurrent ? fg : fgSub,
+                          fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
+                        )),
                     const SizedBox(height: 2),
                     Text(
                       isCurrent
@@ -266,13 +278,13 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                           : canEdit
                               ? 'Ketuk untuk ubah status'
                               : 'Menunggu progres',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: TextStyle(color: fgMuted, fontSize: 12),
                     ),
                   ],
                 ),
               ),
             ),
-            if (canEdit) const Icon(Icons.chevron_right, size: 18),
+            if (canEdit) Icon(Icons.chevron_right, size: 18, color: fgMuted),
           ],
         ),
       ),
@@ -284,34 +296,42 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     final controller = ref.watch(appControllerProvider);
     final profile = controller.currentUser;
     final ticket = controller.getTicketById(widget.ticketId);
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.onSurface;
+    final fgSub = fg.withValues(alpha: 0.6);
+    final fgMuted = fg.withValues(alpha: 0.4);
 
     if (ticket == null) {
-      return const Scaffold(body: Center(child: Text('Tiket tidak ditemukan.')));
+      return GradientScaffold(
+        appBar: glassAppBar(title: 'Detail Tiket'),
+        body: Center(child: Text('Tiket tidak ditemukan.', style: TextStyle(color: fgSub))),
+      );
     }
 
     final currentStatusIndex = TicketStatus.values.indexOf(ticket.status);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Detail Tiket')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
-          TweenAnimationBuilder<double>(
-            duration: const Duration(milliseconds: 450),
-            tween: Tween(begin: 0, end: 1),
-            builder: (context, value, child) => Opacity(
-              opacity: value,
-              child: Transform.translate(offset: Offset(0, (1 - value) * 10), child: child),
-            ),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+    return GradientScaffold(
+      appBar: glassAppBar(title: 'Detail Tiket'),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: <Widget>[
+            TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 450),
+              tween: Tween(begin: 0, end: 1),
+              builder: (context, value, child) => Opacity(
+                opacity: value,
+                child: Transform.translate(offset: Offset(0, (1 - value) * 10), child: child),
+              ),
+              child: GlassCard(
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(ticket.title, style: Theme.of(context).textTheme.headlineSmall),
+                    Text(ticket.title,
+                        style: TextStyle(color: fg, fontSize: 22, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 8),
-                    Text(ticket.description),
+                    Text(ticket.description, style: TextStyle(color: fgSub)),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
@@ -326,112 +346,144 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                 ),
               ),
             ),
-          ),
-          if (_isSupport(profile)) ...<Widget>[
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _isBusy ? null : _openSupportActionsSheet,
-              icon: const Icon(Icons.admin_panel_settings),
-              label: const Text('Aksi Helpdesk/Admin'),
-            ),
-          ],
-          if (ticket.imageUrl != null && ticket.imageUrl!.isNotEmpty) ...<Widget>[
-            const SizedBox(height: 12),
-            Card(
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Image.network(
-                    ticket.imageUrl!,
-                    height: 240,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
+            if (_isSupport(profile)) ...<Widget>[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _isBusy ? null : _openSupportActionsSheet,
+                icon: const Icon(Icons.admin_panel_settings),
+                label: const Text('Aksi Helpdesk/Admin'),
+              ),
+            ],
+            if (ticket.imageUrl != null && ticket.imageUrl!.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 12),
+              GlassCard(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Image.network(
+                        ticket.imageUrl!,
                         height: 240,
                         width: double.infinity,
-                        alignment: Alignment.center,
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                        child: const Text('Lampiran gambar tidak dapat ditampilkan'),
-                      );
-                    },
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 240,
+                            width: double.infinity,
+                            alignment: Alignment.center,
+                            color: fg.withValues(alpha: 0.05),
+                            child: Text('Lampiran gambar tidak dapat ditampilkan',
+                                style: TextStyle(color: fgSub)),
+                          );
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          'Lampiran: ${ticket.imageUrl}',
+                          style: TextStyle(color: fgMuted, fontSize: 12),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Text(
-                      'Lampiran: ${ticket.imageUrl}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            Text('Tracking Status',
+                style: TextStyle(color: fg.withValues(alpha: 0.9), fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            ...TicketStatus.values.asMap().entries.map((entry) {
+              final index = entry.key;
+              final status = entry.value;
+              final canEdit = _isSupport(profile);
+              return _buildStatusStep(
+                context,
+                status,
+                currentStatusIndex,
+                index == TicketStatus.values.length - 1,
+                canEdit,
+                canEdit ? () => _setStatus(status) : null,
+              );
+            }),
+            const SizedBox(height: 16),
+            Text('Riwayat Aktivitas',
+                style: TextStyle(color: fg.withValues(alpha: 0.9), fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            ...ticket.tracking
+                .map(
+                  (trace) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.timeline, color: AGColors.accentCyan, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(trace.message, style: TextStyle(color: fg)),
+                                Text('${trace.actorName} • ${_formatDate(trace.createdAt)}',
+                                    style: TextStyle(color: fgSub, fontSize: 12)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ],
+                )
+                .toList(),
+            const SizedBox(height: 16),
+            Text('Komentar / Reply',
+                style: TextStyle(color: fg.withValues(alpha: 0.9), fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            ...ticket.comments
+                .map(
+                  (comment) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: GlassCard(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(comment.message, style: TextStyle(color: fg)),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${comment.authorName} (${comment.authorRole.value}) • ${_formatDate(comment.createdAt)}',
+                            style: TextStyle(color: fgSub, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _commentController,
+              style: TextStyle(color: fg),
+              decoration: const InputDecoration(
+                labelText: 'Tulis komentar',
               ),
+              minLines: 1,
+              maxLines: 3,
+            ),
+            const SizedBox(height: 8),
+            FilledButton.icon(
+              onPressed: _isBusy ? null : _submitComment,
+              icon: const Icon(Icons.send),
+              label: const Text('Kirim Reply'),
             ),
           ],
-          const SizedBox(height: 20),
-          Text('Tracking Status', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ...TicketStatus.values.asMap().entries.map((entry) {
-            final index = entry.key;
-            final status = entry.value;
-            final canEdit = _isSupport(profile);
-            return _buildStatusStep(
-              context,
-              status,
-              currentStatusIndex,
-              index == TicketStatus.values.length - 1,
-              canEdit,
-              canEdit ? () => _setStatus(status) : null,
-            );
-          }),
-          const SizedBox(height: 16),
-          Text('Riwayat Aktivitas', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ...ticket.tracking
-              .map(
-                (trace) => Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.timeline),
-                    title: Text(trace.message),
-                    subtitle: Text('${trace.actorName} • ${_formatDate(trace.createdAt)}'),
-                  ),
-                ),
-              )
-              .toList(),
-          const SizedBox(height: 16),
-          Text('Komentar / Reply', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ...ticket.comments
-              .map(
-                (comment) => Card(
-                  child: ListTile(
-                    title: Text(comment.message),
-                    subtitle: Text(
-                      '${comment.authorName} (${comment.authorRole.value}) • ${_formatDate(comment.createdAt)}',
-                    ),
-                  ),
-                ),
-              )
-              .toList(),
-          TextField(
-            controller: _commentController,
-            decoration: const InputDecoration(
-              labelText: 'Tulis komentar',
-              border: OutlineInputBorder(),
-            ),
-            minLines: 1,
-            maxLines: 3,
-          ),
-          const SizedBox(height: 8),
-          FilledButton.icon(
-            onPressed: _isBusy ? null : _submitComment,
-            icon: const Icon(Icons.send),
-            label: const Text('Kirim Reply'),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
+

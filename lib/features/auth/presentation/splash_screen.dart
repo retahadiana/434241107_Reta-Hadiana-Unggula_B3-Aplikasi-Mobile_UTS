@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_controller.dart';
+import '../../../core/theme/glassmorphism.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -33,30 +34,52 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: <Color>[Color(0xFF005F73), Color(0xFF0A9396), Color(0xFF94D2BD)],
+            colors: <Color>[
+              AGColors.deepNavy,
+              AGColors.charcoal,
+              Color(0xFF1E1545),
+              AGColors.softPurple,
+            ],
+            stops: [0.0, 0.35, 0.7, 1.0],
           ),
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(Icons.support_agent, color: Colors.white, size: 88),
-            SizedBox(height: 20),
-            Text(
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.08),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+              ),
+              child: const Icon(Icons.support_agent, color: Colors.white, size: 64),
+            ),
+            const SizedBox(height: 28),
+            const Text(
               'E-Ticketing Helpdesk',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
                 fontSize: 28,
+                letterSpacing: -0.5,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Pelaporan, monitoring, dan penyelesaian masalah',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
             ),
-            SizedBox(height: 28),
-            CircularProgressIndicator(color: Colors.white),
+            const SizedBox(height: 36),
+            SizedBox(
+              width: 36,
+              height: 36,
+              child: CircularProgressIndicator(
+                color: AGColors.accentCyan,
+                strokeWidth: 2.5,
+              ),
+            ),
           ],
         ),
       ),

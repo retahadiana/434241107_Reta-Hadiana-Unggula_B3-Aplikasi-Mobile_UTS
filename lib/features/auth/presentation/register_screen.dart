@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_controller.dart';
+import '../../../core/theme/glassmorphism.dart';
 import '../../../models/profile_model.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -76,40 +77,64 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Daftar Akun')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.onSurface;
+    final fgSub = fg.withValues(alpha: 0.6);
+    final fgMuted = fg.withValues(alpha: 0.4);
+
+    return GradientScaffold(
+      appBar: glassAppBar(title: 'Daftar Akun'),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            GlassCard(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('Buat akun baru', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Buat akun baru',
+                      style: TextStyle(color: fg, fontSize: 20, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 6),
-                  const Text('Pilih role akun saat registrasi.'),
-                  const SizedBox(height: 14),
+                  Text('Pilih role akun saat registrasi.',
+                      style: TextStyle(color: fgSub)),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+                    style: TextStyle(color: fg),
+                    decoration: InputDecoration(
+                      labelText: 'Nama Lengkap',
+                      prefixIcon: Icon(Icons.person_outline, color: fgMuted),
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    style: TextStyle(color: fg),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email_outlined, color: fgMuted),
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    style: TextStyle(color: fg),
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: Icon(Icons.lock_outline, color: fgMuted),
+                    ),
                     obscureText: true,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<UserRole>(
                     initialValue: _selectedRole,
-                    decoration: const InputDecoration(labelText: 'Role'),
+                    dropdownColor: theme.colorScheme.surface,
+                    style: TextStyle(color: fg),
+                    decoration: InputDecoration(
+                      labelText: 'Role',
+                      prefixIcon: Icon(Icons.badge_outlined, color: fgMuted),
+                    ),
                     items: UserRole.values
                         .map(
                           (role) => DropdownMenuItem<UserRole>(
@@ -124,7 +149,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       }
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : ElevatedButton(
@@ -134,8 +159,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_controller.dart';
 import '../../../core/permissions.dart';
+import '../../../core/theme/glassmorphism.dart';
 import '../../../models/profile_model.dart';
 import '../../tickets/presentation/history_screen.dart';
 import 'role_provisioning_screen.dart';
@@ -14,12 +15,13 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(appControllerProvider);
     final profile = controller.currentUser;
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.onSurface;
+    final fgSub = fg.withValues(alpha: 0.6);
 
     if (profile == null) {
-      return const Center(child: Text('Tidak ada profil aktif.'));
+      return Center(child: Text('Tidak ada profil aktif.', style: TextStyle(color: fgSub)));
     }
-
-    final colorScheme = Theme.of(context).colorScheme;
 
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -34,14 +36,15 @@ class ProfileScreen extends ConsumerWidget {
           child: _ProfileHeader(profile: profile),
         ),
         const SizedBox(height: 16),
-        Card(
+        GlassCard(
           child: Column(
             children: [
               ListTile(
-                leading: const Icon(Icons.history),
-                title: const Text('Riwayat & Tracking'),
-                subtitle: const Text('Lihat histori aktivitas tiket'),
-                trailing: const Icon(Icons.chevron_right),
+                leading: const Icon(Icons.history, color: AGColors.accentCyan),
+                title: Text('Riwayat & Tracking', style: TextStyle(color: fg, fontWeight: FontWeight.w500)),
+                subtitle: Text('Lihat histori aktivitas tiket',
+                    style: TextStyle(color: fgSub)),
+                trailing: Icon(Icons.chevron_right, color: fg.withValues(alpha: 0.4)),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -49,14 +52,15 @@ class ProfileScreen extends ConsumerWidget {
                   );
                 },
               ),
-              const Divider(height: 1),
+              Divider(height: 1, color: fg.withValues(alpha: 0.08)),
               ListTile(
-                leading: const Icon(Icons.dark_mode),
-                title: const Text('Dark Mode'),
+                leading: const Icon(Icons.dark_mode, color: AGColors.accentCyan),
+                title: Text('Dark Mode', style: TextStyle(color: fg, fontWeight: FontWeight.w500)),
                 subtitle: Text(
                   controller.themeMode == ThemeMode.dark
                       ? 'Tampilan gelap aktif'
                       : 'Tampilan terang aktif',
+                  style: TextStyle(color: fgSub),
                 ),
                 trailing: Switch(
                   value: controller.themeMode == ThemeMode.dark,
@@ -71,27 +75,32 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ),
         if (PermissionGuard.hasPermission(profile.role, AppPermission.manageUserRoles))
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.admin_panel_settings),
-              title: const Text('Provisioning Role User'),
-              subtitle: const Text('Atur role User/Helpdesk/Admin'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => const RoleProvisioningScreen(),
-                  ),
-                );
-              },
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: GlassCard(
+              child: ListTile(
+                leading: const Icon(Icons.admin_panel_settings, color: AGColors.softPurple),
+                title: Text('Provisioning Role User', style: TextStyle(color: fg, fontWeight: FontWeight.w500)),
+                subtitle: Text('Atur role User/Helpdesk/Admin',
+                    style: TextStyle(color: fgSub)),
+                trailing: Icon(Icons.chevron_right, color: fg.withValues(alpha: 0.4)),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const RoleProvisioningScreen(),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         const SizedBox(height: 12),
-        FilledButton.icon(
-          style: FilledButton.styleFrom(
-            backgroundColor: colorScheme.errorContainer,
-            foregroundColor: colorScheme.onErrorContainer,
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 48),
+            side: BorderSide(color: const Color(0xFFFF6B6B).withValues(alpha: 0.5)),
+            foregroundColor: const Color(0xFFFF6B6B),
           ),
           onPressed: () async {
             await ref.read(appControllerProvider).logout();
@@ -114,46 +123,65 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.onSurface;
+    final fgSub = fg.withValues(alpha: 0.6);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: colorScheme.primaryContainer,
-                  child: Text(profile.fullName.substring(0, 1).toUpperCase()),
+    return GlassCard(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AGColors.accentCyan.withValues(alpha: 0.5), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AGColors.accentCyan.withValues(alpha: 0.2),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(profile.fullName,
-                          style: Theme.of(context).textTheme.titleLarge),
-                      Text(profile.email),
-                    ],
+                child: CircleAvatar(
+                  radius: 26,
+                  backgroundColor: AGColors.accentCyan.withValues(alpha: 0.15),
+                  child: Text(
+                    profile.fullName.substring(0, 1).toUpperCase(),
+                    style: const TextStyle(color: AGColors.accentCyan, fontSize: 22, fontWeight: FontWeight.w700),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: colorScheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(999),
               ),
-              child: Text('Role: ${profile.role.value}'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(profile.fullName,
+                        style: TextStyle(color: fg, fontSize: 20, fontWeight: FontWeight.w600)),
+                    Text(profile.email, style: TextStyle(color: fgSub)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: AGColors.softPurple.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: AGColors.softPurple.withValues(alpha: 0.3)),
             ),
-          ],
-        ),
+            child: Text('Role: ${profile.role.value}',
+                style: const TextStyle(color: AGColors.softPurple, fontWeight: FontWeight.w500)),
+          ),
+        ],
       ),
     );
   }
 }
+

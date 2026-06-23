@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_controller.dart';
+import '../../../core/theme/glassmorphism.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -57,101 +58,112 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final errorMessage = ref.watch(appControllerProvider).lastError;
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.onSurface;
+    final fgSub = fg.withValues(alpha: 0.6);
+    final fgMuted = fg.withValues(alpha: 0.4);
 
-    return Scaffold(
+    return GradientScaffold(
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(24),
-                gradient: LinearGradient(
-                  colors: <Color>[
-                    colorScheme.primary,
-                    colorScheme.primary.withValues(alpha: 0.75),
-                  ],
-                ),
-              ),
-              child: const Column(
+            const SizedBox(height: 24),
+            GlassCard(
+              padding: const EdgeInsets.all(24),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Icon(Icons.support_agent, color: Colors.white, size: 34),
-                  SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AGColors.accentCyan.withValues(alpha: 0.15),
+                    ),
+                    child: const Icon(Icons.support_agent, color: AGColors.accentCyan, size: 34),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     'Welcome Back',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700),
+                    style: TextStyle(color: fg, fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: -0.5),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Text(
                     'Masuk untuk melanjutkan monitoring dan pengelolaan tiket.',
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: fgSub),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 14),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text('Login E-Ticketing', style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 6),
-                    const Text('Masuk menggunakan akun backend Supabase yang sudah terdaftar.'),
-                    if (errorMessage != null) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          errorMessage,
-                          style: TextStyle(color: colorScheme.onErrorContainer),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                    ),
+            const SizedBox(height: 16),
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text('Login E-Ticketing',
+                      style: TextStyle(color: fg, fontSize: 20, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  Text('Masuk menggunakan akun backend Supabase yang sudah terdaftar.',
+                      style: TextStyle(color: fgSub)),
+                  if (errorMessage != null) ...[
                     const SizedBox(height: 10),
-                    TextField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(labelText: 'Password'),
-                      obscureText: true,
-                    ),
-                    const SizedBox(height: 14),
-                    _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ElevatedButton(
-                            onPressed: _handleLogin,
-                            child: const Text('Login'),
-                          ),
-                    const SizedBox(height: 6),
-                    Align(
-                      alignment: Alignment.center,
-                      child: TextButton(
-                        onPressed: () => Navigator.pushNamed(context, '/reset-password'),
-                        child: const Text('Lupa password?'),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF6B6B).withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFFF6B6B).withValues(alpha: 0.3)),
                       ),
-                    ),
-                    Align(
-                      alignment: Alignment.center,
-                      child: TextButton(
-                        onPressed: () => Navigator.pushNamed(context, '/register'),
-                        child: const Text('Belum punya akun? Register'),
+                      child: Text(
+                        errorMessage,
+                        style: const TextStyle(color: Color(0xFFFF6B6B)),
                       ),
                     ),
                   ],
-                ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _emailController,
+                    style: TextStyle(color: fg),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email_outlined, color: fgMuted),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: _passwordController,
+                    style: TextStyle(color: fg),
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: Icon(Icons.lock_outline, color: fgMuted),
+                    ),
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 20),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                          onPressed: _handleLogin,
+                          child: const Text('Sign In'),
+                        ),
+                  const SizedBox(height: 6),
+                  Align(
+                    alignment: Alignment.center,
+                    child: TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/reset-password'),
+                      child: const Text('Lupa password?'),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/register'),
+                      child: const Text('Belum punya akun? Register'),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

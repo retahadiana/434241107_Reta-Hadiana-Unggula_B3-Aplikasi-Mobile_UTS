@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_controller.dart';
+import '../../../core/theme/glassmorphism.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -58,27 +59,38 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.onSurface;
+    final fgSub = fg.withValues(alpha: 0.6);
+    final fgMuted = fg.withValues(alpha: 0.4);
+
+    return GradientScaffold(
+      appBar: glassAppBar(title: 'Reset Password'),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            GlassCard(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Pulihkan akun Anda', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Pulihkan akun Anda',
+                      style: TextStyle(color: fg, fontSize: 20, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 6),
-                  const Text('Masukkan email terdaftar untuk menerima tautan reset password.'),
-                  const SizedBox(height: 14),
+                  Text('Masukkan email terdaftar untuk menerima tautan reset password.',
+                      style: TextStyle(color: fgSub)),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    style: TextStyle(color: fg),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email_outlined, color: fgMuted),
+                    ),
                     keyboardType: TextInputType.emailAddress,
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 20),
                   _isSending
                       ? const Center(child: CircularProgressIndicator())
                       : ElevatedButton(
@@ -88,9 +100,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+

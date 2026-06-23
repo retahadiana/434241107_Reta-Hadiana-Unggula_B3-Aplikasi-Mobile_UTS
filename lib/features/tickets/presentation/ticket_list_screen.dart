@@ -2,22 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_controller.dart';
+import '../../../core/theme/glassmorphism.dart';
 import '../../../models/ticket_model.dart';
 import 'ticket_detail_screen.dart';
 
 class TicketListScreen extends ConsumerWidget {
   const TicketListScreen({super.key});
 
-  Color _statusColor(BuildContext context, TicketStatus status) {
+  Color _statusColor(TicketStatus status) {
     switch (status) {
       case TicketStatus.open:
-        return const Color(0xFF0F766E);
+        return const Color(0xFF74B9FF);
       case TicketStatus.inProgress:
-        return const Color(0xFFEA580C);
+        return const Color(0xFFFFA502);
       case TicketStatus.resolved:
-        return const Color(0xFF16A34A);
+        return AGColors.accentCyan;
       case TicketStatus.closed:
-        return Theme.of(context).colorScheme.outline;
+        return Colors.white54;
     }
   }
 
@@ -25,10 +26,14 @@ class TicketListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(appControllerProvider);
     final tickets = controller.visibleTickets;
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.onSurface;
+    final fgSub = fg.withValues(alpha: 0.6);
 
     if (tickets.isEmpty) {
-      return const Center(
-        child: Text('Belum ada tiket. Buat tiket pertama Anda dari tombol Create Ticket.'),
+      return Center(
+        child: Text('Belum ada tiket. Buat tiket pertama Anda dari tombol Create Ticket.',
+            style: TextStyle(color: fgSub)),
       );
     }
 
@@ -38,11 +43,11 @@ class TicketListScreen extends ConsumerWidget {
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final ticket = tickets[index];
-        final color = _statusColor(context, ticket.status);
+        final color = _statusColor(ticket.status);
 
-        return Card(
+        return TicketCard(
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             onTap: () {
               Navigator.push(
                 context,
@@ -52,7 +57,7 @@ class TicketListScreen extends ConsumerWidget {
               );
             },
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -61,21 +66,31 @@ class TicketListScreen extends ConsumerWidget {
                       Container(
                         width: 10,
                         height: 10,
-                        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6, spreadRadius: 1),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           ticket.title,
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: TextStyle(
+                            color: fg,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Icon(Icons.chevron_right),
+                      Icon(Icons.chevron_right, color: fg.withValues(alpha: 0.4)),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -103,14 +118,18 @@ class _MetaPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedColor = color ?? Theme.of(context).colorScheme.outline;
+    final theme = Theme.of(context);
+    final fgSub = theme.colorScheme.onSurface.withValues(alpha: 0.6);
+    final resolvedColor = color ?? fgSub;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: resolvedColor.withValues(alpha: 0.12),
+        color: resolvedColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: resolvedColor.withValues(alpha: 0.25)),
       ),
       child: Text(label, style: TextStyle(color: resolvedColor, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 }
+

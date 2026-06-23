@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_controller.dart';
 import '../../../core/permissions.dart';
+import '../../../core/theme/glassmorphism.dart';
 import '../../../models/profile_model.dart';
 import '../../../models/ticket_model.dart';
 import 'create_ticket_screen.dart';
@@ -18,6 +19,10 @@ class DashboardScreen extends ConsumerWidget {
     final stats = controller.dashboardStats;
     final tickets = controller.visibleTickets;
     final user = controller.currentUser;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final fg = dark ? Colors.white : AGColors.deepNavy;
+    final fgSub = fg.withValues(alpha: 0.6);
+    final accent = dark ? AGColors.accentCyan : AGColors.softPurple;
 
     if (user == null) {
       return const Center(child: CircularProgressIndicator());
@@ -26,33 +31,24 @@ class DashboardScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: <Widget>[
-        Card(
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: <Color>[
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                  Theme.of(context).colorScheme.secondary.withValues(alpha: 0.12),
-                ],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text('Halo, ${user.fullName}', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 6),
-                Text('Role aktif: ${user.role.value}'),
-                const SizedBox(height: 2),
-                Text('Pantau ringkasan performa tiket helpdesk Anda hari ini.'),
-              ],
-            ),
+        GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('Halo, ${user.fullName}',
+                  style: TextStyle(color: fg, fontSize: 22, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              Text('Role aktif: ${user.role.value}', style: TextStyle(color: accent)),
+              const SizedBox(height: 2),
+              Text('Pantau ringkasan performa tiket helpdesk Anda hari ini.',
+                  style: TextStyle(color: fgSub)),
+            ],
           ),
         ),
         const SizedBox(height: 14),
-        Text('Ringkasan Tiket', style: Theme.of(context).textTheme.titleMedium),
+        Text('Ringkasan Tiket',
+            style: TextStyle(color: fg.withValues(alpha: 0.9), fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 10),
         _StatsGrid(stats: stats, total: tickets.length),
         const SizedBox(height: 16),
@@ -87,54 +83,58 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
-        Text('Tiket Terbaru', style: Theme.of(context).textTheme.titleMedium),
+        Text('Tiket Terbaru',
+            style: TextStyle(color: fg.withValues(alpha: 0.9), fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         if (tickets.isEmpty)
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Belum ada tiket aktif.'),
-            ),
+          GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Text('Belum ada tiket aktif.', style: TextStyle(color: fgSub)),
           )
         else
           ...tickets.take(5).map(
-                (ticket) => Card(
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                          builder: (_) => TicketDetailScreen(ticketId: ticket.id),
+                (ticket) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: GlassCard(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (_) => TicketDetailScreen(ticketId: ticket.id),
+                          ),
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: <Widget>[
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: accent.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(Icons.confirmation_number, color: accent, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(ticket.title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: fg, fontWeight: FontWeight.w500)),
+                                  const SizedBox(height: 4),
+                                  Text('${ticket.status.label} • ${ticket.userName}',
+                                      style: TextStyle(color: fgSub, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.chevron_right, color: fg.withValues(alpha: 0.4)),
+                          ],
                         ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Row(
-                        children: <Widget>[
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(Icons.confirmation_number),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(ticket.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                const SizedBox(height: 4),
-                                Text('${ticket.status.label} • ${ticket.userName}'),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.chevron_right),
-                        ],
                       ),
                     ),
                   ),
@@ -153,6 +153,10 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final fg = dark ? Colors.white : AGColors.deepNavy;
+    final accent = dark ? AGColors.accentCyan : AGColors.softPurple;
+
     return Column(
       children: <Widget>[
         Row(
@@ -160,13 +164,13 @@ class _StatsGrid extends StatelessWidget {
             _StatCard(
               title: 'Open',
               value: stats[TicketStatus.open] ?? 0,
-              color: const Color(0xFF005F73),
+              color: const Color(0xFF74B9FF),
             ),
             const SizedBox(width: 10),
             _StatCard(
               title: 'In Progress',
               value: stats[TicketStatus.inProgress] ?? 0,
-              color: const Color(0xFFCA6702),
+              color: const Color(0xFFFFA502),
             ),
           ],
         ),
@@ -176,25 +180,30 @@ class _StatsGrid extends StatelessWidget {
             _StatCard(
               title: 'Resolved',
               value: stats[TicketStatus.resolved] ?? 0,
-              color: const Color(0xFF0A9396),
+              color: const Color(0xFF00CEC9),
             ),
             const SizedBox(width: 10),
             _StatCard(
               title: 'Closed',
               value: stats[TicketStatus.closed] ?? 0,
-              color: const Color(0xFF6C757D),
+              color: dark ? Colors.white.withValues(alpha: 0.4) : AGColors.charcoal.withValues(alpha: 0.4),
             ),
           ],
         ),
         const SizedBox(height: 10),
-        Card(
-          child: ListTile(
-            leading: const Icon(Icons.summarize),
-            title: const Text('Total tiket'),
-            trailing: Text(
-              '$total',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+        GlassCard(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(Icons.summarize, color: accent),
+              const SizedBox(width: 12),
+              Text('Total tiket', style: TextStyle(color: fg)),
+              const Spacer(),
+              Text(
+                '$total',
+                style: TextStyle(color: fg, fontSize: 24, fontWeight: FontWeight.w700),
+              ),
+            ],
           ),
         ),
       ],
@@ -215,28 +224,22 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final fgSub = dark ? Colors.white.withValues(alpha: 0.7) : AGColors.deepNavy.withValues(alpha: 0.6);
+
     return Expanded(
-      child: Card(
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withValues(alpha: 0.4)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(title),
-              const SizedBox(height: 8),
-              Text(
-                '$value',
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall
-                    ?.copyWith(color: color, fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
+      child: GlassCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(title, style: TextStyle(color: fgSub, fontSize: 13)),
+            const SizedBox(height: 8),
+            Text(
+              '$value',
+              style: TextStyle(color: color, fontSize: 28, fontWeight: FontWeight.w700),
+            ),
+          ],
         ),
       ),
     );

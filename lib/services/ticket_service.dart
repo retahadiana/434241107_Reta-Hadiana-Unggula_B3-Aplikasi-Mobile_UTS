@@ -63,12 +63,16 @@ class TicketService {
   }
 
   Future<List<TicketNotification>> fetchNotificationsForRole(Profile actor) async {
-    final orFilter = 'target_user_id.eq.${actor.id},target_role.eq.${actor.role.value}';
-    final data = await _supabase
-        .from('ticket_notifications')
-        .select()
-        .or(orFilter)
-        .order('created_at', ascending: false);
+    dynamic query = _supabase.from('ticket_notifications').select();
+
+    if (actor.role == UserRole.user) {
+      query = query.eq('target_user_id', actor.id);
+    } else {
+      final orFilter = 'target_user_id.eq.${actor.id},target_role.eq.${actor.role.value}';
+      query = query.or(orFilter);
+    }
+
+    final data = await query.order('created_at', ascending: false);
 
     return (data as List<dynamic>)
         .map((row) => TicketNotification.fromJson(row as Map<String, dynamic>))

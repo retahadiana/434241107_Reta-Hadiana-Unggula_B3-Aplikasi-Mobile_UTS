@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/app_controller.dart';
+import '../../../core/theme/glassmorphism.dart';
 
 class CreateTicketScreen extends ConsumerStatefulWidget {
   const CreateTicketScreen({super.key});
@@ -106,78 +107,92 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final fg = theme.colorScheme.onSurface;
+    final fgSub = fg.withValues(alpha: 0.6);
+    final fgMuted = fg.withValues(alpha: 0.4);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Buat Tiket Baru')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TweenAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 500),
-              tween: Tween(begin: 0, end: 1),
-              builder: (context, value, child) => Opacity(
-                opacity: value,
-                child: Transform.translate(offset: Offset(0, (1 - value) * 12), child: child),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colorScheme.primaryContainer,
-                      colorScheme.secondaryContainer,
+    return GradientScaffold(
+      appBar: glassAppBar(title: 'Buat Tiket Baru'),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TweenAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 500),
+                tween: Tween(begin: 0, end: 1),
+                builder: (context, value, child) => Opacity(
+                  opacity: value,
+                  child: Transform.translate(offset: Offset(0, (1 - value) * 12), child: child),
+                ),
+                child: GlassCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.confirmation_num_outlined, color: AGColors.accentCyan),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Lengkapi detail kendala agar tim support bisa menangani lebih cepat.',
+                          style: TextStyle(color: fgSub),
+                        ),
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.confirmation_num_outlined),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Lengkapi detail kendala agar tim support bisa menangani lebih cepat.',
-                      ),
-                    ),
-                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+              const SizedBox(height: 16),
+              GlassCard(
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   children: [
                     TextField(
                       controller: _titleController,
-                      decoration: const InputDecoration(labelText: 'Judul Masalah'),
+                      style: TextStyle(color: fg),
+                      decoration: InputDecoration(
+                        labelText: 'Judul Masalah',
+                        prefixIcon: Icon(Icons.title, color: fgMuted),
+                      ),
                     ),
                     const SizedBox(height: 14),
                     TextField(
                       controller: _descController,
                       maxLines: 4,
-                      decoration: const InputDecoration(labelText: 'Deskripsi Detail'),
+                      style: TextStyle(color: fg),
+                      decoration: InputDecoration(
+                        labelText: 'Deskripsi Detail',
+                        alignLabelWithHint: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(color: AGColors.glassBorder),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(color: AGColors.glassBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(color: AGColors.accentCyan, width: 1.5),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+              const SizedBox(height: 16),
+              GlassCard(
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.attachment, color: colorScheme.primary),
+                        const Icon(Icons.attachment, color: AGColors.accentCyan),
                         const SizedBox(width: 8),
-                        Text('Lampiran', style: Theme.of(context).textTheme.titleMedium),
+                        Text('Lampiran',
+                            style: TextStyle(color: fg.withValues(alpha: 0.9), fontSize: 16, fontWeight: FontWeight.w600)),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -199,10 +214,11 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: colorScheme.outlineVariant),
-                                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                                border: Border.all(color: fg.withValues(alpha: 0.1)),
+                                color: fg.withValues(alpha: 0.03),
                               ),
-                              child: const Text('Belum ada gambar terpilih'),
+                              child: Text('Belum ada gambar terpilih',
+                                  style: TextStyle(color: fgMuted)),
                             ),
                     ),
                     const SizedBox(height: 12),
@@ -228,16 +244,16 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-            _isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _submitTicket,
-                    style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-                    child: const Text('Kirim Laporan'),
-                  ),
-          ],
+              const SizedBox(height: 32),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _submitTicket,
+                      style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                      child: const Text('Kirim Laporan'),
+                    ),
+            ],
+          ),
         ),
       ),
     );
