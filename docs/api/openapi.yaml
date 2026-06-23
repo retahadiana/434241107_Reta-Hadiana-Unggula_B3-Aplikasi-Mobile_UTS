@@ -1,0 +1,605 @@
+openapi: 3.0.3
+info:
+  title: E-Ticketing Helpdesk API
+  version: 1.0.0
+  description: >-
+    Contract API for the e-ticketing helpdesk project. The Flutter app in this
+    repository currently uses Supabase directly, so this specification documents
+    the logical REST contract for a dedicated backend layer that matches the
+    current features and database schema.
+servers:
+  - url: https://kzkxgjvdcybhbtqqubon.supabase.co/rest/v1
+    description: Supabase REST (PostgREST) — recommended primary server for table operations
+  - url: https://kzkxgjvdcybhbtqqubon.supabase.co/auth/v1
+    description: Supabase Auth endpoints (public) — use for login/register/reset-password
+  - url: http://localhost:3000
+    description: Local backend (use if you implement a separate HTTP API during development)
+  - url: https://api.yourdomain.com
+    description: Production backend (use if you deploy a dedicated backend service)
+tags:
+  - name: Auth
+  - name: Profiles
+  - name: Tickets
+  - name: Comments
+  - name: Tracking
+  - name: Notifications
+  - name: Admin
+
+security:
+  - bearerAuth: []
+    apiKeyAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register user
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registration success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Request password reset
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '204':
+          description: Reset email sent
+
+  /profiles/me:
+    get:
+      tags: [Profiles]
+      summary: Get current profile
+      responses:
+        '200':
+          description: Profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+    patch:
+      tags: [Profiles]
+      summary: Update current profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdateRequest'
+      responses:
+        '200':
+          description: Profile updated
+
+  /admin/profiles:
+    get:
+      tags: [Admin]
+      summary: List all profiles for admin
+      responses:
+        '200':
+          description: Profile list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Profile'
+
+  /admin/users/{userId}/role:
+    patch:
+      tags: [Admin]
+      summary: Assign role to a user
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleAssignmentRequest'
+      responses:
+        '204':
+          description: Role updated
+
+  /tickets:
+    get:
+      tags: [Tickets]
+      summary: List tickets for current role
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/TicketStatus'
+      responses:
+        '200':
+          description: Ticket list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ticket'
+    post:
+      tags: [Tickets]
+      summary: Create a ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+
+  /tickets/{ticketId}:
+    get:
+      tags: [Tickets]
+      summary: Get ticket detail
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: Ticket detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketDetail'
+    patch:
+      tags: [Tickets]
+      summary: Update ticket status or assignment
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTicketRequest'
+      responses:
+        '200':
+          description: Ticket updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+
+  /tickets/{ticketId}/comments:
+    get:
+      tags: [Comments]
+      summary: List comments for a ticket
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: Comment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TicketComment'
+    post:
+      tags: [Comments]
+      summary: Add a comment to a ticket
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCommentRequest'
+      responses:
+        '201':
+          description: Comment created
+
+  /tickets/{ticketId}/tracking:
+    get:
+      tags: [Tracking]
+      summary: Get tracking history for a ticket
+      parameters:
+        - $ref: '#/components/parameters/TicketId'
+      responses:
+        '200':
+          description: Tracking events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TicketTrackingEvent'
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications for current user or role
+      responses:
+        '200':
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TicketNotification'
+
+  /notifications/{notificationId}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark notification as read
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+      responses:
+        '204':
+          description: Notification marked as read
+
+  /files/ticket-attachments:
+    post:
+      tags: [Tickets]
+      summary: Upload ticket attachment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttachmentUploadRequest'
+      responses:
+        '200':
+          description: Upload success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+
+components:
+  parameters:
+    TicketId:
+      in: path
+      name: ticketId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    NotificationId:
+      in: path
+      name: notificationId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      in: path
+      name: userId
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    UnauthorizedError:
+      description: Invalid or missing token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: apikey
+      description: Supabase anon or service_role key
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          example: bearer
+        expires_in:
+          type: integer
+          example: 3600
+      required: [access_token, refresh_token]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+      required: [name, email, password]
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required: [email]
+
+    ProfileUpdateRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+      required: [full_name]
+
+    RoleAssignmentRequest:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/UserRole'
+      required: [role]
+
+    CreateTicketRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          nullable: true
+          example: High
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+      required: [title, description]
+
+    UpdateTicketRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+        assigned_to:
+          type: string
+          nullable: true
+
+    AddCommentRequest:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    AttachmentUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+      required: [file]
+
+    UploadResponse:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+      required: [url]
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        email:
+          type: string
+          format: email
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, full_name, role]
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        user_name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+        priority:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+        assigned_to:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required: [id, user_id, user_name, title, description, status, created_at, updated_at]
+
+    TicketDetail:
+      allOf:
+        - $ref: '#/components/schemas/Ticket'
+        - type: object
+          properties:
+            comments:
+              type: array
+              items:
+                $ref: '#/components/schemas/TicketComment'
+            tracking:
+              type: array
+              items:
+                $ref: '#/components/schemas/TicketTrackingEvent'
+
+    TicketComment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticket_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        author_name:
+          type: string
+        author_role:
+          $ref: '#/components/schemas/UserRole'
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required: [id, ticket_id, author_id, author_name, author_role, message, created_at]
+
+    TicketTrackingEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ticket_id:
+          type: string
+          format: uuid
+        actor_name:
+          type: string
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required: [id, ticket_id, actor_name, message, created_at]
+
+    TicketNotification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        message:
+          type: string
+        ticket_id:
+          type: string
+          format: uuid
+        target_role:
+          $ref: '#/components/schemas/UserRole'
+        target_user_id:
+          type: string
+          format: uuid
+          nullable: true
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      required: [id, title, message, ticket_id, target_role, is_read, created_at]
+
+    TicketStatus:
+      type: string
+      enum: [Open, In Progress, Resolved, Closed]
+
+    UserRole:
+      type: string
+      enum: [User, Helpdesk, Admin]
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]

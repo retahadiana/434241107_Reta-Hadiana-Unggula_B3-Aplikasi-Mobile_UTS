@@ -1,0 +1,225 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "E-Ticketing Helpdesk API - Admin Module",
+    "version": "1.0.0",
+    "description": "Dokumentasi API khusus untuk Role Admin pada project E-Ticketing Helpdesk. Mencakup fungsi kelola pengguna, kelola tiket keseluruhan, serta dashboard statistik."
+  },
+  "servers": [
+    {
+      "url": "https://kzkxgjvdcybhbtqqubon.supabase.co/rest/v1",
+      "description": "Supabase REST API (PostgREST)"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Backend"
+    }
+  ],
+  "tags": [
+    { "name": "Admin Dashboard", "description": "Statistik dan Laporan" },
+    { "name": "User Management", "description": "Kelola data pengguna dan hak akses" },
+    { "name": "Ticket Management", "description": "Kelola tiket masuk dan penugasan teknisi" }
+  ],
+  "security": [
+    {
+      "bearerAuth": [],
+      "apiKeyAuth": []
+    }
+  ],
+  "paths": {
+    "/admin/stats": {
+      "get": {
+        "tags": ["Admin Dashboard"],
+        "summary": "Mendapatkan statistik dashboard",
+        "description": "Mengembalikan jumlah total tiket (Open, In Progress, Resolved) dan total pengguna.",
+        "responses": {
+          "200": {
+            "description": "Berhasil mengambil statistik",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStats"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/profiles": {
+      "get": {
+        "tags": ["User Management"],
+        "summary": "Melihat daftar semua pengguna",
+        "responses": {
+          "200": {
+            "description": "Berhasil mengambil daftar pengguna",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Profile" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{userId}/role": {
+      "patch": {
+        "tags": ["User Management"],
+        "summary": "Mengubah role pengguna",
+        "description": "Admin dapat mengubah role pengguna (misal dari User menjadi Helpdesk/Teknisi).",
+        "parameters": [
+          { "$ref": "#/components/parameters/UserId" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": { "$ref": "#/components/schemas/UserRole" }
+                },
+                "required": ["role"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Role berhasil diubah" }
+        }
+      }
+    },
+    "/tickets": {
+      "get": {
+        "tags": ["Ticket Management"],
+        "summary": "Melihat semua tiket",
+        "description": "Admin dapat melihat semua tiket dari seluruh pengguna.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": { "$ref": "#/components/schemas/TicketStatus" },
+            "description": "Filter tiket berdasarkan status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar seluruh tiket",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Ticket" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets/{ticketId}": {
+      "patch": {
+        "tags": ["Ticket Management"],
+        "summary": "Update status atau assign teknisi",
+        "parameters": [
+          { "$ref": "#/components/parameters/TicketId" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "$ref": "#/components/schemas/TicketStatus" },
+                  "assigned_to": { 
+                    "type": "string", 
+                    "format": "uuid", 
+                    "description": "ID Teknisi/Helpdesk" 
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Tiket berhasil diupdate" }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "UserId": {
+        "in": "path",
+        "name": "userId",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "TicketId": {
+        "in": "path",
+        "name": "ticketId",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT Admin"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "apikey",
+        "description": "Supabase Anon/Service Key"
+      }
+    },
+    "schemas": {
+      "UserRole": {
+        "type": "string",
+        "enum": ["User", "Helpdesk", "Admin"]
+      },
+      "TicketStatus": {
+        "type": "string",
+        "enum": ["Open", "In Progress", "Resolved", "Closed"]
+      },
+      "DashboardStats": {
+        "type": "object",
+        "properties": {
+          "total_tickets": { "type": "integer", "example": 120 },
+          "open_tickets": { "type": "integer", "example": 45 },
+          "in_progress_tickets": { "type": "integer", "example": 30 },
+          "resolved_tickets": { "type": "integer", "example": 45 },
+          "total_users": { "type": "integer", "example": 50 }
+        }
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "full_name": { "type": "string" },
+          "role": { "$ref": "#/components/schemas/UserRole" },
+          "email": { "type": "string", "format": "email" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Ticket": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/TicketStatus" },
+          "assigned_to": { "type": "string", "format": "uuid", "nullable": true },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}
